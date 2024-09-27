@@ -19,7 +19,7 @@ jobs:
       - name: Set up Node.js (if using Node.js)
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # Adjust to your version
+          node-version: '20'
       
       # Install dependencies
       - name: Install dependencies
