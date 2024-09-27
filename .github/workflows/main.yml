@@ -1,5 +1,6 @@
-name: CI/CD Pipeline
+name: CI Workflow
 
+# Trigger the workflow on every push to the main branch
 on:
   push:
     branches:
@@ -10,33 +11,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Check out the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Navigate to the directory where pom.xml is located
-      - name: Change directory to the correct project folder
-        run: cd backend # Adjust 'backend' to match the folder where pom.xml is located
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+      # Set up Java, Node.js, or the environment required for your project
+      - name: Set up Node.js (if using Node.js)
+        uses: actions/setup-node@v3
         with:
-          distribution: 'temurin'
-          java-version: '17' # Adjust to your Java version
-
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
+          node-version: '16' # Adjust to your version
+      
+      # Install dependencies
       - name: Install dependencies
-        run: mvn install -DskipTests
+        run: npm install
 
+      # Run tests
       - name: Run tests
-        run: mvn test
+        run: npm test
 
-      - name: Build the application
-        run: mvn package
+      # Generate build artifacts
+      - name: Build application
+        run: npm run build
+
+      # Upload build artifacts (optional)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/
 
