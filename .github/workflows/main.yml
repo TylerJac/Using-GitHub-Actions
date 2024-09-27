@@ -54,12 +54,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Deploy to Heroku (example)
-      - name: Deploy to Heroku
+      - name: Deploy to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          git remote add heroku https://git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git
-          echo "${{ secrets.HEROKU_API_KEY }}" | docker login --username=_ --password-stdin registry.heroku.com
-          git push heroku main
+          aws s3 sync ./build s3://cool_bucket --delete --region us-east-2
 
 
 
