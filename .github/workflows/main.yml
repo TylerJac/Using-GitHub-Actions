@@ -1,6 +1,5 @@
-name: CI Workflow
+name: CI/CD Workflow
 
-# Trigger the workflow on every push to the main branch
 on:
   push:
     branches:
@@ -15,12 +14,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Java, Node.js, or the environment required for your project
-      - name: Set up Node.js (if using Node.js)
+      # Set up Node.js (ensure it uses Node.js 20)
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-      
+
       # Install dependencies
       - name: Install dependencies
         run: npm install
@@ -39,4 +38,20 @@ jobs:
         with:
           name: build
           path: build/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      # Checkout the code again
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Deploy to Heroku (example)
+      - name: Deploy to Heroku
+        run: |
+          git remote add heroku https://git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git
+          echo "${{ secrets.HEROKU_API_KEY }}" | docker login --username=_ --password-stdin registry.heroku.com
+          git push heroku main
+
 
