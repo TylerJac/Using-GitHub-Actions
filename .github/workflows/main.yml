@@ -1,0 +1,78 @@
+name: CI/CD Pipeline
+
+# Trigger workflow on push to main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Define the job to check out code, install dependencies, and run tests
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Java environment (assuming it's a Java project, adjust accordingly)
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17' # or your preferred version
+
+      # Step 3: Cache dependencies to improve workflow speed
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: mvn install -DskipTests
+
+      # Step 5: Run tests
+      - name: Run tests
+        run: mvn test
+
+      # Step 6: Generate build artifacts (e.g., JAR or WAR files)
+      - name: Build the application
+        run: mvn package
+
+      # Step 7: Upload build artifacts (optional, if you want to keep them in GitHub)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifact
+          path: target/*.jar # Adjust based on your project structure
+
+  # Define the deployment job
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      # Step 1: Checkout code (again, in case it's needed for deployment)
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Install Heroku CLI (assuming Heroku for deployment)
+      - name: Install Heroku CLI
+        uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+      
+      # Step 3: Deploy to Heroku
+      - name: Deploy to Heroku
+        run: |
+          heroku container:login
+          heroku container:push web --app ${{ secrets.HEROKU_APP_NAME }}
+          heroku container:release web --app ${{ secrets.HEROKU_APP_NAME }}
