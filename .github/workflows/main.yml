@@ -9,9 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      # Force GitHub Actions to use Node.js 20 runtime
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: true
 
     steps:
       # Use the latest checkout version
@@ -23,8 +20,11 @@ jobs:
         uses: actions/setup-node@v4
 
       # Install dependencies
-      - name: Install dependencies
-        run: npm install
+      - name: Clean install dependencies and build
+        run: |
+          npm ci
+          npm run build
+
 
       # Run tests
       - name: Run tests
