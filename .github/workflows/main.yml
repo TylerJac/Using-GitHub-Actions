@@ -54,12 +54,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Deploy to Heroku (example)
-      - name: Deploy to Heroku
+      - name: Deploy to Elastic Beanstalk
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}  # Optional, if not using the default region
         run: |
-          git remote add heroku https://git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git
-          echo "${{ secrets.HEROKU_API_KEY }}" | docker login --username=_ --password-stdin registry.heroku.com
-          git push heroku main
+          zip -r deploy.zip .
+          eb init my-eb-app --platform node.js --region $AWS_REGION 
+          eb deploy 
 
 
 
