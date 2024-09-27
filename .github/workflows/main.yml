@@ -1,29 +1,28 @@
 name: CI/CD Pipeline
 
-# Trigger workflow on push to the main branch
 on:
   push:
     branches:
       - main
 
 jobs:
-  # Define the job to check out code, install dependencies, run tests, and build artifacts
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Java environment (adjust the version based on your project)
+      # Navigate to the directory where pom.xml is located
+      - name: Change directory to the correct project folder
+        run: cd backend # Adjust 'backend' to match the folder where pom.xml is located
+
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin' # You can change to 'zulu' or others if needed
-          java-version: '17' # Update this based on your needs
+          distribution: 'temurin'
+          java-version: '17' # Adjust to your Java version
 
-      # Step 3: Cache dependencies to improve workflow speed
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
@@ -32,48 +31,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # Step 4: Install dependencies without running tests
       - name: Install dependencies
         run: mvn install -DskipTests
 
-      # Step 5: Run tests
       - name: Run tests
         run: mvn test
 
-      # Step 6: Build the application (create JAR or WAR files)
       - name: Build the application
         run: mvn package
-
-      # Step 7: Upload build artifacts (optional, can be skipped if not needed)
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-artifact
-          path: target/*.jar # Adjust the path based on your project structure
-
-  # Define the deployment job
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      # Step 1: Check out the code again for deployment
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Step 2: Install Heroku CLI (if deploying to Heroku)
-      - name: Install Heroku CLI
-        uses: akhileshns/heroku-deploy@v4.0.0 # Updated version
-        with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
-
-      # Step 3: Deploy to Heroku
-      - name: Deploy to Heroku
-        run: |
-          heroku container:login
-          heroku container:push web --app ${{ secrets.HEROKU_APP_NAME }}
-          heroku container:release web --app ${{ secrets.HEROKU_APP_NAME }}
 
